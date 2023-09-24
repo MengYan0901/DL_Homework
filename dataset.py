@@ -8,7 +8,7 @@ import torchvision.transforms as transforms
 
 def celebA_transform():
     transform = transforms.Compose([
-        transforms.Resize((64, 64)),  # Resize images to a common size
+        transforms.Resize((128, 128)),  # Resize images to a common size
         transforms.ToTensor(),  # Convert images to PyTorch tensors
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalize pixel values to [-1, 1]
     ])
@@ -16,9 +16,9 @@ def celebA_transform():
     return transform, target_transform
 
 
-def flowers102_transform():
+def flowers102_transform(args):
     transform = transforms.Compose([
-        transforms.Resize((224, 224)),  # Resize images to a common size (adjust as needed)
+        transforms.Resize((args.size, args.size)),  # Resize images to a common size (adjust as needed)
         transforms.RandomHorizontalFlip(),  # Randomly flip images horizontally for data augmentation
         transforms.ToTensor(),  # Convert images to PyTorch tensors
         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))  # ImageNet mean and standard deviation
@@ -38,7 +38,7 @@ def get_data(args, return_dataset=False):
                              transform=transform, download=False)
 
     elif args.dataset == 'flowers102':
-        transform, target_transform = flowers102_transform()
+        transform, target_transform = flowers102_transform(args)
         train_dataset = Flowers102(root=root_data_path, split='train',
                                    transform=transform, target_transform=target_transform, download=True)
 
