@@ -8,8 +8,8 @@
 | Meng Yan | I1MDQ0  | 
 | Mengkedalai.Mengkedalai | YHFSZZ | 
 
-## Project Description
+## Project Description  
+functions of the files in the repo  
 
-functions of the files in the repo
-
-how to run it (if ipynb, just specify the file name) 
+### Installation  
+how to run it (if ipynb, just specify the file name)   
