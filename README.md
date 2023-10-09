@@ -1,4 +1,4 @@
-# DL_Homework 
+# Image generation with diffusion models
 ## Team Introduction
 **Name**:  Magical Mavericks  
 **Members:**  
