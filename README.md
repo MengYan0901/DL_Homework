@@ -1,6 +1,6 @@
 # DL_Homework 
 ## Team Introduction
-**Name**: Magical Mavericks  
+**Name**:  Magical Mavericks  
 **Members:**  
 | Name | Neptun | 
 |:---|:---|
@@ -8,7 +8,7 @@
 | Meng Yan | I1MDQ0  | 
 | Mengkedalai.Mengkedalai | YHFSZZ | 
 
-**Project Description**
+## Project Description
 
 functions of the files in the repo
 
