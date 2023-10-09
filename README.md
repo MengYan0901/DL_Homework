@@ -1,15 +1,13 @@
 # DL_Homework 
-**Team Introduction**
-
+## Team Introduction
 **Name**: Magical Mavericks  
-
 **Members of group**  
 
-1.Meng Yan I1MDQO
-
-2.Mengkedalai.Mengkedalai YHFSZZ
-
-3.Luu Hai Tung JF64K7
+| Name | Neptun | 
+|:---|:---|
+| Luu Hai Tung | JF64K7 | 
+| Meng Yan | I1MDQO  | 
+| Mengkedalai.Mengkedalai | YHFSZZ | 
 
 **Project Description**
 
