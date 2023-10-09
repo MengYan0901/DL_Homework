@@ -7,7 +7,7 @@ from dataset import get_data
 
 def main():
     parser = argparse.ArgumentParser(description='Parameter Processing')
-    parser.add_argument('--dataset', type=str, default='CIFAR100', help='dataset')
+    parser.add_argument('--dataset', type=str, default='flowers102', help='dataset')
     parser.add_argument('--batch_size', type=int, default=128, help='batch size')
     parser.add_argument('--size', type=int, default=64, help='Image size')
     args = parser.parse_args()
