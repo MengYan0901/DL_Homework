@@ -212,7 +212,7 @@ class GaussianDiffusion(nn.Module):
 
     def predict_noise_from_start(self, x_t, t, x0):
         return (
-                (extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t - x0) / \
+                (extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t - x0) /
                 extract(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape)
         )
 
@@ -259,6 +259,11 @@ class GaussianDiffusion(nn.Module):
             x_start = self.predict_start_from_v(x, t, v)
             x_start = maybe_clip(x_start)
             pred_noise = self.predict_noise_from_start(x, t, x_start)
+
+        else:
+            pred_noise = None
+            x_start = None
+            raise Exception("pred noise and x_start is None")
 
         return ModelPrediction(pred_noise, x_start)
 
