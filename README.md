@@ -2,7 +2,6 @@
 ## Team Introduction
 **Name**: Magical Mavericks  
 **Members of group**  
-
 | Name | Neptun | 
 |:---|:---|
 | Luu Hai Tung | JF64K7 | 
