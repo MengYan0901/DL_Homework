@@ -1,6 +1,7 @@
 # Import dataset
 from torchvision.datasets import CelebA, Flowers102
 from torch.utils.data import DataLoader
+import os
 
 # Transform
 import torchvision.transforms as transforms
@@ -28,7 +29,8 @@ def flowers102_transform(args):
 
 
 def get_data(args, return_dataset=False):
-    root_data_path = '/home/luu/DeepLearning_HW/datasets'
+    current_script_path = os.path.abspath(__file__)
+    root_data_path = os.path.dirname(current_script_path) + "./datasets"
     if args.dataset == 'celebA':
         transform, target_transform = celebA_transform()
         train_dataset = CelebA(root=root_data_path, split='train', target_type='attr',
