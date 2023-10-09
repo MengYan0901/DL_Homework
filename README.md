@@ -1,7 +1,7 @@
 # DL_Homework 
 ## Team Introduction
 **Name**: Magical Mavericks  
-**Members of group**  
+**Members:**  
 | Name | Neptun | 
 |:---|:---|
 | Luu Hai Tung | JF64K7 | 
