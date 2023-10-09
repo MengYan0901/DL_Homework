@@ -1,9 +1,9 @@
 # DL_Homework 
 **Team Introduction**
 
-**Name**: Magical Mavericks
+**Name**: Magical Mavericks  
 
-**Members of group**
+**Members of group**  
 
 1.Meng Yan I1MDQO
 
