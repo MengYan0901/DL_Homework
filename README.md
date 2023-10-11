@@ -19,7 +19,7 @@ Follow the instruction: [Installation](https://docs.anaconda.com/free/anaconda/i
 2. Create conda environment:  
 Open Anaconda Powershell Prompt and enter the following command.  
 create environment:   
-`conda create -n your-environment-name python=3.6`    
+`conda create -n your-environment-name python=3.8`    
 activate environment:  
 `conda activate your-environment-name`
 3. install packages:  
@@ -31,18 +31,21 @@ activate environment:
 
 
 ### Dataset: [FLOWERS102](https://pytorch.org/vision/0.15/generated/torchvision.datasets.Flowers102.html) (Provided By Pytorch)  
+1. Data Analysis
 * Augmentation Methods
 
-[`RandomResizedCrop`](https://pytorch.org/vision/0.15/generated/torchvision.transforms.v2.RandomResizedCrop.html?highlight=randomresizedcrop#torchvision.transforms.v2.RandomResizedCrop): randomly flip an image horizontally (i.e., about its vertical axis) with a given probability. 
-This helps in increasing the diversity of the training data, making the model more robust. 
+[`RandomResizedCrop`](https://pytorch.org/vision/0.15/generated/torchvision.transforms.v2.RandomResizedCrop.html?highlight=randomresizedcrop#torchvision.transforms.v2.RandomResizedCrop): 
+Randomly crop sub-images of different areas in the original image and resize these sub-images to the specified size.
+Introducing randomness into the training data improves the robustness and generalization ability of the model
 
-[`RandomHorizontalFlip`](https://pytorch.org/vision/0.15/generated/torchvision.transforms.v2.RandomHorizontalFlip.html?highlight=randomhorizontalflip#torchvision.transforms.v2.RandomHorizontalFlip): randomly flip an image horizontally (i.e., about its vertical axis) with a given probability. 
+[`RandomHorizontalFlip`](https://pytorch.org/vision/0.15/generated/torchvision.transforms.v2.RandomHorizontalFlip.html?highlight=randomhorizontalflip#torchvision.transforms.v2.RandomHorizontalFlip): 
+Randomly flip an image horizontally with a given probability. 
 This helps in increasing the diversity of the training data, making the model more robust.  
 
-[`Normalize`](https://pytorch.org/vision/0.15/generated/torchvision.transforms.v2.Normalize.html?highlight=normalize#torchvision.transforms.v2.Normalize): randomly flip an image horizontally (i.e., about its vertical axis) with a given probability. 
-This helps in increasing the diversity of the training data, making the model more robust.  
+[`Normalize`](https://pytorch.org/vision/0.15/generated/torchvision.transforms.v2.Normalize.html?highlight=normalize#torchvision.transforms.v2.Normalize): 
+Scale the pixel values of the image to a specific range. So that the model can better learn image features and improve the stability and effect of training 
 
-* Data Preparation  
+* Balance Of Dataset
 
 Training dataset: 102 classes, each class include 10 images
 
@@ -51,11 +54,25 @@ Validation dataset: 102 classes, each class include 10 images
 * Visualization  
 
 Original Image:
-![Original Image](results/data_analysis/12_sample_images_original.png)
+![Original Image](results/data_analysis/16_sample_images_original.png)
 
 Augmented Image:
 
-![Augmented Image](results/data_analysis/12_sample_images_augmentated.png)
+![Augmented Image](results/data_analysis/16_sample_images_augmentated.png)
+
+2. Data Preparation   
+
+For the diffusion process, we do not really need the labels.   
+Instead, the common loss is negative log-likelihood function to measure the discrepancy between 2 distributions.
+
+Original Image:
+![Original Image](results/data_preparation/original_image.png)
+
+Noisy Image:
+
+![Augmented Image](results/data_preparation/noisy_image.png)
+
+
 
 ### Reference
 ```
@@ -66,5 +83,13 @@ Augmented Image:
   volume={33},
   pages={6840--6851},
   year={2020}
+}
+@inproceedings{nichol2021improved,
+  title={Improved denoising diffusion probabilistic models},
+  author={Nichol, Alexander Quinn and Dhariwal, Prafulla},
+  booktitle={International Conference on Machine Learning},
+  pages={8162--8171},
+  year={2021},
+  organization={PMLR}
 }
 ```
