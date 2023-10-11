@@ -22,7 +22,9 @@ create environment:
 `conda create -n your-environment-name python=3.8`    
 activate environment:  
 `conda activate your-environment-name`
-3. install packages:  
+3. install pytorch:  
+`conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch`  
+4. install packages:  
 `pip install -r requirements.txt`
 
 
@@ -53,10 +55,10 @@ Validation dataset: 102 classes, each class include 10 images
 
 * Visualization  
 
-Original Image:
+Original Image:  
 ![Original Image](results/data_analysis/16_sample_images_original.png)
 
-Augmented Image:
+Augmented Image:  
 
 ![Augmented Image](results/data_analysis/16_sample_images_augmentated.png)
 
@@ -65,10 +67,10 @@ Augmented Image:
 For the diffusion process, we do not really need the labels.   
 Instead, the common loss is negative log-likelihood function to measure the discrepancy between 2 distributions.
 
-Original Image:
+Original Image:  
 ![Original Image](results/data_preparation/original_image.png)
 
-Noisy Image:
+Noisy Image:  
 
 ![Augmented Image](results/data_preparation/noisy_image.png)
 
