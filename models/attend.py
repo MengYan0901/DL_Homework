@@ -28,9 +28,11 @@ def once(fn):
         return fn(x)
     return inner
 
+
 print_once = once(print)
 
 # main class
+
 
 class Attend(nn.Module):
     def __init__(

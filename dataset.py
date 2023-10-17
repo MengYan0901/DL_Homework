@@ -1,5 +1,5 @@
 # Import dataset
-from torchvision.datasets import CelebA, Flowers102
+from torchvision.datasets import CelebA, Flowers102, CIFAR10
 from torch.utils.data import DataLoader
 
 # Transform
@@ -27,6 +27,18 @@ def flowers102_transform(args):
     return transform, target_transform
 
 
+def cifar10_transform(args):
+    data_transforms = [
+        transforms.Resize((args.size, args.size)),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),  # Scales data into [0,1]
+        transforms.Lambda(lambda t: (t * 2) - 1)  # Scale between [-1, 1]
+    ]
+
+    data_transform = transforms.Compose(data_transforms)
+    return data_transform
+
+
 def get_data(args, return_dataset=False):
     root_data_path = '/home/luu/DeepLearning_HW/datasets'
     if args.dataset == 'celebA':
@@ -44,6 +56,13 @@ def get_data(args, return_dataset=False):
 
         val_dataset = Flowers102(root=root_data_path, split='val',
                                  transform=transform, download=False)
+
+    elif args.dataset == 'cifar10':
+        data_transform = cifar10_transform(args)
+        train_dataset = CIFAR10(root=".", download=True, transform=data_transform, train=True)
+
+        val_dataset = CIFAR10(root=".", download=True, transform=data_transform, train=False)
+
     else:
         train_dataset = None
         val_dataset = None
