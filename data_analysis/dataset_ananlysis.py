@@ -9,7 +9,7 @@ def show_random_original_images(args, dataset, num_images, cols):
 
     if args.dataset == 'flowers102':
         # Specify the path to your JSON file
-        json_file_path = "/home/luu/DeepLearning_HW/flower_to_name.json"
+        json_file_path = "flower_to_name.json"
 
         # Open the JSON file for reading
         with open(json_file_path, "r") as json_file:
@@ -33,14 +33,14 @@ def show_random_original_images(args, dataset, num_images, cols):
             plt.imshow(img.squeeze().permute(1, 2, 0))
 
     print("saving original images")
-    visualize_path = '/home/luu/DeepLearning_HW/results/visualize/'
-    plt.savefig(visualize_path + f"{num_images}_sample_images.png")
+    visualize_path = '../results/data_analysis/'
+    plt.savefig(visualize_path + f"{args.dataset}_{num_images}_images.png")
     plt.close()
 
 
 def main():
     parser = argparse.ArgumentParser(description='Parameter Processing')
-    parser.add_argument('--dataset', type=str, default='CIFAR100', help='dataset')
+    parser.add_argument('--dataset', type=str, default='flowers102', help='dataset')
     parser.add_argument('--batch_size', type=int, default=128, help='batch size')
     parser.add_argument('--size', type=int, default=64, help='Image size')
     args = parser.parse_args()
