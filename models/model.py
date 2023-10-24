@@ -17,6 +17,7 @@ from models.attend import Attend
 from tqdm.auto import tqdm
 
 
+
 def exists(x):
     return x is not None
 
