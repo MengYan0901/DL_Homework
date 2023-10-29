@@ -67,17 +67,17 @@ def main():
                     clean_image_cpu = batch[0].cpu().detach().numpy()
                     denoised_image_cpu = denoised_image.cpu().detach().numpy()
 
-                    print(clean_image_cpu.shape, denoised_image_cpu.shape)
+                    # print(clean_image_cpu.shape, denoised_image_cpu.shape)
                     # Calculate PSNR
                     psnr = peak_signal_noise_ratio(clean_image_cpu, denoised_image_cpu)
 
-                    # Calculate SSIM
-                    ssim = structural_similarity(batch[0].cpu().detach().numpy(),
-                                                 denoised_image.cpu().detach().numpy(), multichannel=True)
+                    # # Calculate SSIM
+                    # ssim = structural_similarity(batch[0].cpu().detach().numpy(),
+                    #                              denoised_image.cpu().detach().numpy(), multichannel=True)
 
                     # Print the results
                     print(f"PSNR: {psnr:.2f} dB")
-                    print(f"SSIM: {ssim:.4f}")
+                    # print(f"SSIM: {ssim:.4f}")
 
                     # image_array = sample_plot_image(args, model)
                     #
