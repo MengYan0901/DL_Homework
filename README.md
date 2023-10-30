@@ -22,8 +22,8 @@ create environment:
 `conda create -n your-environment-name python=3.8`    
 activate environment:  
 `conda activate your-environment-name`
-3. install pytorch:  
-`conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch`  
+3. install pytorch: (We are using the latest version of pytorch (2.1.0), make sure your NVIDIA cuda-version is more than 11.8. If not, please upgrade your NVIDIA cuda version first.) 
+`conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia`  
 4. install packages:  
 `pip install -r requirements.txt`
 
