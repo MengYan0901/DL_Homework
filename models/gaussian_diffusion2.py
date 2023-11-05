@@ -1,22 +1,160 @@
-import torch.nn as nn
+import math
+import copy
+from pathlib import Path
+from random import random
+from functools import partial
+from collections import namedtuple
+from multiprocessing import cpu_count
+
 import torch
 from torch import nn, einsum
 from torch.cuda.amp import autocast
 import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader
+
 from torch.optim import Adam
-from tqdm.auto import tqdm
-from einops import rearrange, reduce, repeat
-from functools import partial
-from collections import namedtuple
+
 from torchvision import transforms as T, utils
-import math
-from random import random
+
+from einops import rearrange, reduce, repeat
+from einops.layers.torch import Rearrange
+
+from PIL import Image
+from tqdm.auto import tqdm
+from ema_pytorch import EMA
+
+from accelerate import Accelerator
+
+from models.attend import Attend
+from models.fid_evaluation import FIDEvaluation
+
+# from denoising_diffusion_pytorch.version import __version__
+
+# constants
 
 ModelPrediction = namedtuple('ModelPrediction', ['pred_noise', 'pred_x_start'])
 
 
+# helpers functions
+
+def exists(x):
+    return x is not None
+
+
+def default(val, d):
+    if exists(val):
+        return val
+    return d() if callable(d) else d
+
+
+def cast_tuple(t, length=1):
+    if isinstance(t, tuple):
+        return t
+    return (t,) * length
+
+
+def divisible_by(numer, denom):
+    return (numer % denom) == 0
+
+
 def identity(t, *args, **kwargs):
     return t
+
+
+def cycle(dl):
+    while True:
+        for data in dl:
+            yield data
+
+
+def has_int_squareroot(num):
+    return (math.sqrt(num) ** 2) == num
+
+
+def num_to_groups(num, divisor):
+    groups = num // divisor
+    remainder = num % divisor
+    arr = [divisor] * groups
+    if remainder > 0:
+        arr.append(remainder)
+    return arr
+
+
+def convert_image_to_fn(img_type, image):
+    if image.mode != img_type:
+        return image.convert(img_type)
+    return image
+
+
+# normalization functions
+
+def normalize_to_neg_one_to_one(img):
+    return img * 2 - 1
+
+
+def unnormalize_to_zero_to_one(t):
+    return (t + 1) * 0.5
+
+
+# small helper modules
+
+def Upsample(dim, dim_out=None):
+    return nn.Sequential(
+        nn.Upsample(scale_factor=2, mode='nearest'),
+        nn.Conv2d(dim, default(dim_out, dim), 3, padding=1)
+    )
+
+
+def Downsample(dim, dim_out=None):
+    return nn.Sequential(
+        Rearrange('b c (h p1) (w p2) -> b (c p1 p2) h w', p1=2, p2=2),
+        nn.Conv2d(dim * 4, default(dim_out, dim), 1)
+    )
+
+
+class RMSNorm(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.g = nn.Parameter(torch.ones(1, dim, 1, 1))
+
+    def forward(self, x):
+        return F.normalize(x, dim=1) * self.g * (x.shape[1] ** 0.5)
+
+
+# sinusoidal positional embeds
+
+class SinusoidalPosEmb(nn.Module):
+    def __init__(self, dim, theta=10000):
+        super().__init__()
+        self.dim = dim
+        self.theta = theta
+
+    def forward(self, x):
+        device = x.device
+        half_dim = self.dim // 2
+        emb = math.log(self.theta) / (half_dim - 1)
+        emb = torch.exp(torch.arange(half_dim, device=device) * -emb)
+        emb = x[:, None] * emb[None, :]
+        emb = torch.cat((emb.sin(), emb.cos()), dim=-1)
+        return emb
+
+
+class RandomOrLearnedSinusoidalPosEmb(nn.Module):
+    """ following @crowsonkb 's lead with random (learned optional) sinusoidal pos emb """
+    """ https://github.com/crowsonkb/v-diffusion-jax/blob/master/diffusion/models/danbooru_128.py#L8 """
+
+    def __init__(self, dim, is_random=False):
+        super().__init__()
+        assert divisible_by(dim, 2)
+        half_dim = dim // 2
+        self.weights = nn.Parameter(torch.randn(half_dim), requires_grad=not is_random)
+
+    def forward(self, x):
+        x = rearrange(x, 'b -> b 1')
+        freqs = x * rearrange(self.weights, 'd -> 1 d') * 2 * math.pi
+        fouriered = torch.cat((freqs.sin(), freqs.cos()), dim=-1)
+        fouriered = torch.cat((x, fouriered), dim=-1)
+        return fouriered
 
 
 def extract(a, t, x_shape):
@@ -64,97 +202,6 @@ def sigmoid_beta_schedule(timesteps, start=-3, end=3, tau=1, clamp_min=1e-5):
     return torch.clip(betas, 0, 0.999)
 
 
-def get_index_from_list(vals, t, x_shape):
-    """
-    Returns a specific index t of a passed list of values vals
-    while considering the batch dimension.
-    """
-    batch_size = t.shape[0]
-    out = vals.gather(-1, t.cpu())
-    return out.reshape(batch_size, *((1,) * (len(x_shape) - 1))).to(t.device)
-
-
-# Define beta schedule
-T = 300
-betas = cosine_beta_schedule(timesteps=T)
-
-# Pre-calculate different terms for closed form
-alphas = 1. - betas
-alphas_cumprod = torch.cumprod(alphas, axis=0)
-alphas_cumprod_prev = F.pad(alphas_cumprod[:-1], (1, 0), value=1.0)
-sqrt_recip_alphas = torch.sqrt(1.0 / alphas)
-sqrt_alphas_cumprod = torch.sqrt(alphas_cumprod)
-sqrt_one_minus_alphas_cumprod = torch.sqrt(1. - alphas_cumprod)
-posterior_variance = betas * (1. - alphas_cumprod_prev) / (1. - alphas_cumprod)
-
-
-@torch.no_grad()
-def sample_timestep(x, t, model):
-    """
-    Calls the model to predict the noise in the image and returns
-    the denoised image.
-    Applies noise to this image, if we are not in the last step yet.
-    """
-    betas_t = get_index_from_list(betas, t, x.shape)
-    sqrt_one_minus_alphas_cumprod_t = get_index_from_list(
-        sqrt_one_minus_alphas_cumprod, t, x.shape
-    )
-    sqrt_recip_alphas_t = get_index_from_list(sqrt_recip_alphas, t, x.shape)
-
-    # Call model (current image - noise prediction)
-    model_mean = sqrt_recip_alphas_t * (
-        x - betas_t * model(x.to(torch.float32), t) / sqrt_one_minus_alphas_cumprod_t
-    )
-    posterior_variance_t = get_index_from_list(posterior_variance, t, x.shape)
-
-    if t == 0:
-        # As pointed out by Luis Pereira (see YouTube comment)
-        # The t's are offset from the t's in the paper
-        return model_mean
-    else:
-        noise = torch.randn_like(x)
-        return model_mean + torch.sqrt(posterior_variance_t) * noise
-
-
-def forward_diffusion_sample(x_0, t, device="cpu"):
-    """
-    Takes an image and a timestep as input and
-    returns the noisy version of it
-    """
-    noise = torch.randn_like(x_0)
-    sqrt_alphas_cumprod_t = get_index_from_list(sqrt_alphas_cumprod, t, x_0.shape)
-    sqrt_one_minus_alphas_cumprod_t = get_index_from_list(
-        sqrt_one_minus_alphas_cumprod, t, x_0.shape
-    )
-    # mean + variance
-    return sqrt_alphas_cumprod_t.to(device) * x_0.to(device) \
-           + sqrt_one_minus_alphas_cumprod_t.to(device) * noise.to(device), noise.to(device)
-
-
-def get_loss(model, x_0, t, device):
-    x_noisy, noise = forward_diffusion_sample(x_0, t, device)
-    noise_pred = model(x_noisy.float(), t)
-    return F.l1_loss(noise, noise_pred), noise_pred
-
-
-def exists(x):
-    return x is not None
-
-
-def default(val, d):
-    if exists(val):
-        return val
-    return d() if callable(d) else d
-
-
-def normalize_to_neg_one_to_one(img):
-    return img * 2 - 1
-
-
-def unnormalize_to_zero_to_one(t):
-    return (t + 1) * 0.5
-
-
 class GaussianDiffusion(nn.Module):
     def __init__(
             self,
@@ -164,7 +211,7 @@ class GaussianDiffusion(nn.Module):
             timesteps=1000,
             sampling_timesteps=None,
             objective='pred_v',
-            beta_schedule='sigmoid',
+            beta_schedule='cosine',
             schedule_fn_kwargs=dict(),
             ddim_sampling_eta=0.,
             auto_normalize=True,
@@ -284,7 +331,7 @@ class GaussianDiffusion(nn.Module):
 
     def predict_noise_from_start(self, x_t, t, x0):
         return (
-                (extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t - x0) /
+                (extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t - x0) / \
                 extract(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape)
         )
 
@@ -331,11 +378,6 @@ class GaussianDiffusion(nn.Module):
             x_start = self.predict_start_from_v(x, t, v)
             x_start = maybe_clip(x_start)
             pred_noise = self.predict_noise_from_start(x, t, x_start)
-
-        else:
-            pred_noise = None
-            x_start = None
-            raise Exception("pred noise and x_start is None")
 
         return ModelPrediction(pred_noise, x_start)
 
@@ -500,7 +542,7 @@ class GaussianDiffusion(nn.Module):
             raise ValueError(f'unknown objective {self.objective}')
 
         loss = F.mse_loss(model_out, target, reduction='none')
-        loss = reduce(loss, 'b ... -> b (...)', 'mean')
+        loss = reduce(loss, 'b ... -> b', 'mean')
 
         loss = loss * extract(self.loss_weight, t, loss.shape)
         return loss.mean()
@@ -512,3 +554,229 @@ class GaussianDiffusion(nn.Module):
 
         img = self.normalize(img)
         return self.p_losses(img, t, *args, **kwargs)
+
+
+# trainer class
+class Trainer(object):
+    def __init__(
+            self,
+            diffusion_model,
+            dataset,
+            *,
+            train_batch_size=16,
+            gradient_accumulate_every=1,
+            augment_horizontal_flip=True,
+            train_lr=1e-4,
+            train_num_steps=100000,
+            ema_update_every=10,
+            ema_decay=0.995,
+            adam_betas=(0.9, 0.99),
+            save_and_sample_every=1000,
+            num_samples=25,
+            results_folder='./results',
+            amp=False,
+            mixed_precision_type='fp16',
+            split_batches=True,
+            convert_image_to=None,
+            calculate_fid=True,
+            inception_block_idx=2048,
+            max_grad_norm=1.,
+            num_fid_samples=50000,
+            save_best_and_latest_only=False
+    ):
+        super().__init__()
+
+        # accelerator
+
+        self.accelerator = Accelerator(
+            split_batches=split_batches,
+            mixed_precision=mixed_precision_type if amp else 'no'
+        )
+
+        # model
+        self.model = diffusion_model
+        self.channels = diffusion_model.channels
+        is_ddim_sampling = diffusion_model.is_ddim_sampling
+
+        # default convert_image_to depending on channels
+
+        if not exists(convert_image_to):
+            convert_image_to = {1: 'L', 3: 'RGB', 4: 'RGBA'}.get(self.channels)
+
+        # sampling and training hyperparameters
+
+        assert has_int_squareroot(num_samples), 'number of samples must have an integer square root'
+        self.num_samples = num_samples
+        self.save_and_sample_every = save_and_sample_every
+
+        self.batch_size = train_batch_size
+        self.gradient_accumulate_every = gradient_accumulate_every
+        assert (train_batch_size * gradient_accumulate_every) >= 16, f'your effective batch size ' \
+                                                                     f'(train_batch_size x gradient_accumulate_every) ' \
+                                                                     f'should be at least 16 or above'
+
+        self.train_num_steps = train_num_steps
+        self.image_size = diffusion_model.image_size
+
+        self.max_grad_norm = max_grad_norm
+
+        # dataset and dataloader
+
+        self.ds = dataset
+
+        # optimizer
+        self.opt = Adam(diffusion_model.parameters(), lr=train_lr, betas=adam_betas)
+
+        dl = DataLoader(self.ds, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=cpu_count())
+
+        dl = self.accelerator.prepare(dl)
+        # _, _, data_loader, _ = self.accelerator.prepare(self.model, self.opt, dl, scheduler)
+        self.dl = cycle(dl)
+
+        # for logging results in a folder periodically
+
+        if self.accelerator.is_main_process:
+            self.ema = EMA(diffusion_model, beta=ema_decay, update_every=ema_update_every)
+            self.ema.to(self.device)
+
+        self.results_folder = Path(results_folder)
+        self.results_folder.mkdir(exist_ok=True)
+
+        # step counter state
+
+        self.step = 0
+
+        # prepare model, dataloader, optimizer with accelerator
+
+        self.model, self.opt = self.accelerator.prepare(self.model, self.opt)
+
+        # FID-score computation
+        self.calculate_fid = calculate_fid and self.accelerator.is_main_process
+
+        if self.calculate_fid:
+            if not is_ddim_sampling:
+                self.accelerator.print(
+                    "WARNING: Robust FID computation requires a lot of generated samples "
+                    "and can therefore be very time consuming."
+                    "Consider using DDIM sampling to save time."
+                )
+            self.fid_scorer = FIDEvaluation(
+                batch_size=self.batch_size,
+                dl=self.dl,
+                sampler=self.ema.ema_model,
+                channels=self.channels,
+                accelerator=self.accelerator,
+                stats_dir=results_folder,
+                device=self.device,
+                num_fid_samples=num_fid_samples,
+                inception_block_idx=inception_block_idx
+            )
+
+        if save_best_and_latest_only:
+            assert calculate_fid, "`calculate_fid` must be True to provide a means for " \
+                                  "model evaluation for `save_best_and_latest_only`."
+            self.best_fid = 1e10  # infinite
+
+        self.save_best_and_latest_only = save_best_and_latest_only
+
+    @property
+    def device(self):
+        return self.accelerator.device
+
+    def save(self, milestone):
+        if not self.accelerator.is_local_main_process:
+            return
+
+        data = {
+            'step': self.step,
+            'model': self.accelerator.get_state_dict(self.model),
+            'opt': self.opt.state_dict(),
+            'ema': self.ema.state_dict(),
+            'scaler': self.accelerator.scaler.state_dict() if exists(self.accelerator.scaler) else None
+        }
+
+        torch.save(data, str(self.results_folder / f'model-{milestone}.pt'))
+
+    def load(self, milestone):
+        accelerator = self.accelerator
+        device = accelerator.device
+
+        data = torch.load(str(self.results_folder / f'model-{milestone}.pt'), map_location=device)
+
+        model = self.accelerator.unwrap_model(self.model)
+        model.load_state_dict(data['model'])
+
+        self.step = data['step']
+        self.opt.load_state_dict(data['opt'])
+        if self.accelerator.is_main_process:
+            self.ema.load_state_dict(data["ema"])
+
+        if 'version' in data:
+            print(f"loading from version {data['version']}")
+
+        if exists(self.accelerator.scaler) and exists(data['scaler']):
+            self.accelerator.scaler.load_state_dict(data['scaler'])
+
+    def train(self):
+        accelerator = self.accelerator
+        device = accelerator.device
+
+        with tqdm(initial=self.step, total=self.train_num_steps, disable=not accelerator.is_main_process) as pbar:
+
+            while self.step < self.train_num_steps:
+
+                total_loss = 0.
+
+                for _ in range(self.gradient_accumulate_every):
+                    data = next(self.dl)[0].to(device)
+
+                    with self.accelerator.autocast():
+                        loss = self.model(data)
+                        loss = loss / self.gradient_accumulate_every
+                        total_loss += loss.item()
+
+                    self.accelerator.backward(loss)
+
+                pbar.set_description(f'loss: {total_loss:.4f}')
+
+                accelerator.wait_for_everyone()
+                accelerator.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
+
+                self.opt.step()
+                self.opt.zero_grad()
+
+                accelerator.wait_for_everyone()
+
+                self.step += 1
+                if accelerator.is_main_process:
+                    self.ema.update()
+
+                    if self.step != 0 and divisible_by(self.step, self.save_and_sample_every):
+                        self.ema.ema_model.eval()
+
+                        with torch.inference_mode():
+                            milestone = self.step // self.save_and_sample_every
+                            batches = num_to_groups(self.num_samples, self.batch_size)
+                            all_images_list = list(map(lambda n: self.ema.ema_model.sample(batch_size=n), batches))
+
+                        all_images = torch.cat(all_images_list, dim=0)
+
+                        utils.save_image(all_images, str(self.results_folder / f'sample-{milestone}.png'),
+                                         nrow=int(math.sqrt(self.num_samples)))
+
+                        # whether to calculate fid
+
+                        if self.calculate_fid:
+                            fid_score = self.fid_scorer.fid_score()
+                            accelerator.print(f'fid_score: {fid_score}')
+                        if self.save_best_and_latest_only:
+                            if self.best_fid > fid_score:
+                                self.best_fid = fid_score
+                                self.save("best")
+                            self.save("latest")
+                        else:
+                            self.save(milestone)
+
+                pbar.update(1)
+
+        accelerator.print('training complete')
