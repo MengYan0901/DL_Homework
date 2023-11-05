@@ -25,7 +25,10 @@ activate environment:
 3. install pytorch: (We are using the latest version of pytorch (2.1.0), make sure your NVIDIA cuda-version is more than 11.8. If not, please upgrade your NVIDIA cuda version first.) 
 `conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia`  
 4. install packages:  
-`pip install -r requirements.txt`
+`pip install einops packaging tqdm ema_pytorch accelerate`
+`pip install pytorch_fid wandb`
+`pip install scikit-image`
+
 
 
 

@@ -61,9 +61,9 @@ def get_data(args, return_dataset=False):
 
     elif args.dataset == 'cifar10':
         data_transform = cifar10_transform(args)
-        train_dataset = CIFAR10(root=".", download=True, transform=data_transform, train=True)
+        train_dataset = CIFAR10(root=root_data_path, download=True, transform=data_transform, train=True)
 
-        val_dataset = CIFAR10(root=".", download=True, transform=data_transform, train=False)
+        val_dataset = CIFAR10(root=root_data_path, download=True, transform=data_transform, train=False)
 
     else:
         train_dataset = None
