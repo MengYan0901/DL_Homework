@@ -1,8 +1,8 @@
 # Image Generation With Diffusion Models
 
 # Contents  
-- [Team Introduction](##team-introduction)  
-- [Project Installation](##project-installation)  
+- [Team Introduction](#team-introduction)  
+- [Project Installation](#project-installation)  
 - [Milestone 1: data acqusition, data preparation](##Milestone-1--data-acqusition--data-preparation)  
   - [1. Data Analysis](##1-data-analysis)  
 - [Reference](##reference) 
