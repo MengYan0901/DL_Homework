@@ -3,9 +3,15 @@
 # Contents  
 - [Team Introduction](#team-introduction)  
 - [Project Installation](#project-installation)  
-- [Milestone 1: data acqusition, data preparation](##Milestone-1--data-acqusition--data-preparation)  
-  - [1. Data Analysis](##1-data-analysis)  
-- [Reference](##reference) 
+- [Milestone 1: data acqusition, data preparation](#milestone-1-data-acqusition-data-preparation)  
+  - [Data Analysis](#data-analysis) 
+  - [Data Preparation](#data-preparation) 
+- [Milestone 2: baseline evaluation, baseline model](#milestone-2-baseline-evaluation-baseline-model)  
+  - [Dataset](#dataset) 
+  - [Model](#Model) 
+  - [Run Project](#run-project)
+  - [Visualization Result](#visualization-result)
+- [Reference](#reference) 
 
 
 ## Team Introduction
@@ -43,7 +49,7 @@ activate environment:
 ## Milestone 1: data acqusition, data preparation
 
 
-### 1. Data Analysis
+### Data Analysis
 
 Dataset: [FLOWERS102](https://pytorch.org/vision/0.15/generated/torchvision.datasets.Flowers102.html) (Provided By Pytorch) 
 
@@ -75,7 +81,7 @@ Augmented Image:
 
 ![Augmented Image](results/data_analysis/16_sample_images_augmentated.png)
 
-### 2. Data Preparation   
+### Data Preparation   
 
 For the diffusion process, we do not really need the labels.   
 Instead, the common loss is negative log-likelihood function to measure the discrepancy between 2 distributions.
