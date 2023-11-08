@@ -1,11 +1,11 @@
 # Image Generation With Diffusion Models
 
-**Contents:**  
-[Team Introduction](##Team-Introduction)  
-[Project Installation](##Project-Installation)  
-[Milestone 1: data acqusition, data preparation](##Milestone 1 data acqusition data preparation)  
-[1. Data Analysis](##1 Data Analysis)  
-[Reference](##reference) 
+# Contents  
+- [Team Introduction](##team-introduction)  
+- [Project Installation](##project-installation)  
+- [Milestone 1: data acqusition, data preparation](##Milestone-1--data-acqusition--data-preparation)  
+  - [1. Data Analysis](##1-data-analysis)  
+- [Reference](##reference) 
 
 
 ##Team Introduction
@@ -87,6 +87,8 @@ Noisy Image:
 
 ![Augmented Image](results/data_preparation/noisy_image.png)
 
+___
+
 ##Milestone 2: baseline evaluation, baseline model
 
 ###Dataset: 
@@ -123,6 +125,8 @@ Train Result:
 Test Result:
 
 ![test_result](results/test_result/test_result.png)
+
+___
 
 ##Reference
 ```
