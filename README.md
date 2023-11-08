@@ -8,7 +8,7 @@
 - [Reference](##reference) 
 
 
-##Team Introduction
+## Team Introduction
 **Name**:  Magical Mavericks  
 **Members:**  
 | Name | Neptun | 
@@ -17,7 +17,7 @@
 | Meng Yan | I1MDQ0  | 
 | Mengkedalai.Mengkedalai | YHFSZZ | 
 
-##Project Installation
+## Project Installation
 
 * Data Analysis
 
@@ -40,10 +40,10 @@ activate environment:
 
 
 
-##Milestone 1: data acqusition, data preparation
+## Milestone 1: data acqusition, data preparation
 
 
-###1. Data Analysis
+### 1. Data Analysis
 
 Dataset: [FLOWERS102](https://pytorch.org/vision/0.15/generated/torchvision.datasets.Flowers102.html) (Provided By Pytorch) 
 
@@ -75,7 +75,7 @@ Augmented Image:
 
 ![Augmented Image](results/data_analysis/16_sample_images_augmentated.png)
 
-###2. Data Preparation   
+### 2. Data Preparation   
 
 For the diffusion process, we do not really need the labels.   
 Instead, the common loss is negative log-likelihood function to measure the discrepancy between 2 distributions.
@@ -89,13 +89,13 @@ Noisy Image:
 
 ___
 
-##Milestone 2: baseline evaluation, baseline model
+## Milestone 2: baseline evaluation, baseline model
 
-###Dataset: 
+### Dataset: 
 [CIFAR10](https://pytorch.org/vision/main/generated/torchvision.datasets.CIFAR10.html) (Provided By Pytorch)  
 used built-in function to efficient in loading the data
 
-###Model
+### Model
 
 ![Directed Graphical Model](results/model/Directed_Graphical_Model.png)
 There is a schematic representation of a machine learning model that involves a diffusion process and a denoising U-Net architecture.
@@ -105,7 +105,7 @@ The overall model is a generative one,  for creating images  that can be conditi
 Add noisy: gaussian_diffusion
 Loss: FID+IS
 
-###Run Project
+### Run Project
 
 * train:  run ``python main.py``
 
@@ -115,7 +115,7 @@ Loss: FID+IS
 
 
 
-###Visualization Result
+### Visualization Result
 
 Train Result:
 
@@ -128,7 +128,7 @@ Test Result:
 
 ___
 
-##Reference
+## Reference
 ```
 @article{ho2020denoising,  
   title={Denoising diffusion probabilistic models},
