@@ -108,7 +108,7 @@ There is a schematic representation of a machine learning model that involves a 
 The overall model is a generative one,  for creating images  that can be conditioned on various forms of auxiliary information  to guide the generation process. The model incorporates modern neural network components like the U-Net and attention mechanisms to process and generate data.
 ![U-Net architecture](results/model/U-Net_architecture.png)
 
-Add noisy: gaussian_diffusion
+Add noisy: gaussian_diffusion  
 Loss: FID+IS
 
 ### Run Project
