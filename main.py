@@ -11,9 +11,11 @@ from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 def main():
     parser = argparse.ArgumentParser(description='Parameter Processing')
     parser.add_argument('--dataset', type=str, default='cifar10', help='dataset')
-    parser.add_argument('--batch_size', type=int, default=32, help='batch size')
+    parser.add_argument('--batch_size', type=int, default=128, help='batch size')
     parser.add_argument('--size', type=int, default=32, help='Image size')
     parser.add_argument('--name_exp', type=str, default='experiment_diffusion_model', help='Describe the experiment')
+    parser.add_argument('--model_save_path', type=str, default='/data2/Users/mengke/unet_model_state.pth',
+                        help='The path of saving model')
     args = parser.parse_args()
     args.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -28,7 +30,7 @@ def main():
     diffusion = GaussianDiffusion(
         model,
         image_size=args.size,
-        timesteps=1000  # number of steps
+        timesteps=10000  # number of steps
     )
 
     trainer = Trainer(
@@ -36,7 +38,7 @@ def main():
         train_data,
         train_batch_size=args.batch_size,
         train_lr=8e-5,
-        train_num_steps=1000,  # total training steps
+        train_num_steps=10000,  # total training steps
         gradient_accumulate_every=2,  # gradient accumulation steps
         ema_decay=0.995,  # exponential moving average decay
         amp=True,  # turn on mixed precision
@@ -44,6 +46,7 @@ def main():
     )
 
     trainer.train()
+    torch.save(model.state_dict(), args.model_save_path)
 
 
 if __name__ == '__main__':
