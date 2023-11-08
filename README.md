@@ -111,11 +111,11 @@ use built-in function to efficient in loading the data
 * Project Model: [U-Net](https://proceedings.neurips.cc/paper/2020/hash/4c5bcfec8584af0d967f1ab10179ca4b-Abstract.html)
 
 Image Diffusion and Inverse Process Over Time Steps:
-![Directed Graphical Model](results/model/Directed_Graphical_Model.png)
+![Directed Graphical Model](results/model/Directed_Graphical_Model.png)     
 The image depicts a diffusion model, aims to generate new data instances by learning the distribution of data. 
 
 Denoising U-Net Architecture for Conditional Diffusion Models:  
-![U-Net architecture](results/model/U-Net_architecture.png)
+![U-Net architecture](results/model/U-Net_architecture.png)     
 The overall model is a generative one for creating images,  that can be conditioned on various forms of auxiliary information  to guide the generation process. The model incorporates modern neural network components like the U-Net  and attention mechanisms to process and generate data.
 
 * Metrics: [FID](https://pytorch.org/ignite/generated/ignite.metrics.FID.html)
