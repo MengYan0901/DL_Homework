@@ -5,7 +5,7 @@
 [Project Installation](##Project-Installation)  
 [Milestone 1: data acqusition, data preparation](##Milestone 1 data acqusition data preparation)  
 [1. Data Analysis](##1 Data Analysis)  
-[Reference](##Reference) 
+[Reference](##reference) 
 
 
 ##Team Introduction
