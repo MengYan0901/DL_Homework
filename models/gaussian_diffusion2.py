@@ -233,7 +233,10 @@ class GaussianDiffusion(nn.Module):
         self.objective = objective
 
         assert objective in {'pred_noise', 'pred_x0',
-                             'pred_v'}, 'objective must be either pred_noise (predict noise) or pred_x0 (predict image start) or pred_v (predict v [v-parameterization as defined in appendix D of progressive distillation paper, used in imagen-video successfully])'
+                             'pred_v'}, 'objective must be either pred_noise (predict noise) ' \
+                                        'or pred_x0 (predict image start) or pred_v ' \
+                                        '(predict v [v-parameterization as defined in appendix D of ' \
+                                        'progressive distillation paper, used in imagen-video successfully])'
 
         if beta_schedule == 'linear':
             beta_schedule_fn = linear_beta_schedule
@@ -331,7 +334,7 @@ class GaussianDiffusion(nn.Module):
 
     def predict_noise_from_start(self, x_t, t, x0):
         return (
-                (extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t - x0) / \
+                (extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t - x0) /
                 extract(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape)
         )
 
@@ -422,11 +425,12 @@ class GaussianDiffusion(nn.Module):
 
     @torch.inference_mode()
     def ddim_sample(self, shape, return_all_timesteps=False):
-        batch, device, total_timesteps, sampling_timesteps, eta, objective = shape[
-                                                                                 0], self.device, self.num_timesteps, self.sampling_timesteps, self.ddim_sampling_eta, self.objective
+        batch, device, total_timesteps, sampling_timesteps, eta, objective = shape[0], self.device, self.num_timesteps, \
+                                                                             self.sampling_timesteps, \
+                                                                             self.ddim_sampling_eta, self.objective
 
-        times = torch.linspace(-1, total_timesteps - 1,
-                               steps=sampling_timesteps + 1)  # [-1, 0, 1, 2, ..., T-1] when sampling_timesteps == total_timesteps
+        # [-1, 0, 1, 2, ..., T-1] when sampling_timesteps == total_timesteps
+        times = torch.linspace(-1, total_timesteps - 1, steps=sampling_timesteps + 1)
         times = list(reversed(times.int().tolist()))
         time_pairs = list(zip(times[:-1], times[1:]))  # [(T-1, T-2), (T-2, T-3), ..., (1, 0), (0, -1)]
 
@@ -454,9 +458,7 @@ class GaussianDiffusion(nn.Module):
 
             noise = torch.randn_like(img)
 
-            img = x_start * alpha_next.sqrt() + \
-                  c * pred_noise + \
-                  sigma * noise
+            img = x_start * alpha_next.sqrt() + c * pred_noise + sigma * noise
 
             imgs.append(img)
 
@@ -581,13 +583,15 @@ class Trainer(object):
             calculate_fid=True,
             inception_block_idx=2048,
             max_grad_norm=1.,
-            num_fid_samples=50000,
-            save_best_and_latest_only=False
+            num_fid_samples=5000,
+            save_best_and_latest_only=False,
+            wandb=None
     ):
         super().__init__()
 
-        # accelerator
+        self.wandb = wandb
 
+        # accelerator
         self.accelerator = Accelerator(
             split_batches=split_batches,
             mixed_precision=mixed_precision_type if amp else 'no'
@@ -621,7 +625,6 @@ class Trainer(object):
         self.max_grad_norm = max_grad_norm
 
         # dataset and dataloader
-
         self.ds = dataset
 
         # optimizer
@@ -634,10 +637,9 @@ class Trainer(object):
         self.dl = cycle(dl)
 
         # for logging results in a folder periodically
-
-        if self.accelerator.is_main_process:
-            self.ema = EMA(diffusion_model, beta=ema_decay, update_every=ema_update_every)
-            self.ema.to(self.device)
+        # if self.accelerator.is_main_process:
+        self.ema = EMA(diffusion_model, beta=ema_decay, update_every=ema_update_every)
+        self.ema.to(self.device)
 
         self.results_folder = Path(results_folder)
         self.results_folder.mkdir(exist_ok=True)
@@ -651,7 +653,7 @@ class Trainer(object):
         self.model, self.opt = self.accelerator.prepare(self.model, self.opt)
 
         # FID-score computation
-        self.calculate_fid = calculate_fid and self.accelerator.is_main_process
+        self.calculate_fid = calculate_fid  # and self.accelerator.is_main_process
 
         if self.calculate_fid:
             if not is_ddim_sampling:
@@ -748,34 +750,42 @@ class Trainer(object):
                 accelerator.wait_for_everyone()
 
                 self.step += 1
+
                 if accelerator.is_main_process:
                     self.ema.update()
 
-                    if self.step != 0 and divisible_by(self.step, self.save_and_sample_every):
-                        self.ema.ema_model.eval()
+                if self.step != 0 and divisible_by(self.step, self.save_and_sample_every):
+                    self.ema.ema_model.eval()
 
-                        with torch.inference_mode():
-                            milestone = self.step // self.save_and_sample_every
-                            batches = num_to_groups(self.num_samples, self.batch_size)
-                            all_images_list = list(map(lambda n: self.ema.ema_model.sample(batch_size=n), batches))
+                    with torch.inference_mode():
+                        milestone = self.step // self.save_and_sample_every
+                        batches = num_to_groups(self.num_samples, self.batch_size)
+                        all_images_list = list(map(lambda n: self.ema.ema_model.sample(batch_size=n), batches))
 
-                        all_images = torch.cat(all_images_list, dim=0)
+                    all_images = torch.cat(all_images_list, dim=0)
 
-                        utils.save_image(all_images, str(self.results_folder / f'sample-{milestone}.png'),
-                                         nrow=int(math.sqrt(self.num_samples)))
+                    utils.save_image(all_images, str(self.results_folder / f'sample-{milestone}.png'),
+                                     nrow=int(math.sqrt(self.num_samples)))
 
-                        # whether to calculate fid
+                    # whether to calculate fid
+                    if self.calculate_fid:
+                        fid_score = self.fid_scorer.fid_score()
+                        accelerator.print(f'fid_score: {fid_score}')
 
-                        if self.calculate_fid:
-                            fid_score = self.fid_scorer.fid_score()
-                            accelerator.print(f'fid_score: {fid_score}')
-                        if self.save_best_and_latest_only:
-                            if self.best_fid > fid_score:
-                                self.best_fid = fid_score
-                                self.save("best")
-                            self.save("latest")
-                        else:
-                            self.save(milestone)
+                    if self.wandb:
+                        tag_loss = 'total_loss'
+                        tag_step = 'step'
+                        tag_fid = 'fid_score'
+
+                        self.wandb.log({tag_loss: total_loss, tag_step: self.step, tag_fid: fid_score})
+
+                    if self.save_best_and_latest_only:
+                        if self.best_fid > fid_score:
+                            self.best_fid = fid_score
+                            self.save("best")
+                        self.save("latest")
+                    else:
+                        self.save(milestone)
 
                 pbar.update(1)
 
