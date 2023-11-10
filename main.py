@@ -14,7 +14,7 @@ def main():
     parser.add_argument('--batch_size', type=int, default=32, help='batch size')
     parser.add_argument('--size', type=int, default=32, help='Image size')
     parser.add_argument('--name_exp', type=str, default='experiment_diffusion_model', help='Describe the experiment')
-    parser.add_argument('--use_wandb', type=bool, default=False, help='Use wandb or not')
+    parser.add_argument('--use_wandb', type=bool, default=True, help='Use wandb or not')
     args = parser.parse_args()
     args.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
