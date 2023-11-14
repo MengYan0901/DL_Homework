@@ -11,10 +11,14 @@ from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 def main():
     parser = argparse.ArgumentParser(description='Parameter Processing')
     parser.add_argument('--dataset', type=str, default='cifar10', help='dataset')
-    parser.add_argument('--batch_size', type=int, default=32, help='batch size')
+    parser.add_argument('--batch_size', type=int, default=256, help='batch size')
     parser.add_argument('--size', type=int, default=32, help='Image size')
-    parser.add_argument('--name_exp', type=str, default='experiment_diffusion_model', help='Describe the experiment')
-    parser.add_argument('--use_wandb', type=bool, default=False, help='Use wandb or not')
+    parser.add_argument('--name_exp', type=str, default='diffusion_model_no-attention', help='Describe the experiment')
+    parser.add_argument('--use_wandb', type=bool, default=True, help='Use wandb or not')
+
+    parser.add_argument('--model_save_path', type=str, default='/data2/Users/mengke/unet_model_state.pth',
+                        help='The path of saving model')
+
     args = parser.parse_args()
     args.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -29,7 +33,7 @@ def main():
     model = Unet(
         dim=64,
         dim_mults=(1, 2, 4, 8),
-        flash_attn=True,
+        flash_attn=False,
         sinusoidal_pos_emb_theta=1000
     )
 
@@ -57,6 +61,7 @@ def main():
     )
 
     trainer.train()
+    # torch.save(model.state_dict(), args.model_save_path)
 
 
 if __name__ == '__main__':
