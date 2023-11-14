@@ -776,8 +776,9 @@ class Trainer(object):
                         tag_loss = 'total_loss'
                         tag_step = 'step'
                         tag_fid = 'fid_score'
-
-                        self.wandb.log({tag_loss: total_loss, tag_step: self.step, tag_fid: fid_score})
+                        tag_image = 'sample_image'
+                        self.wandb.log({tag_loss: total_loss, tag_step: self.step, tag_fid: fid_score,
+                                        tag_image: all_images})
 
                     if self.save_best_and_latest_only:
                         if self.best_fid > fid_score:
