@@ -31,7 +31,7 @@
 
 * Data Analysis
 
-Only use <`data_analysis/data_analysis.ipynb`> to check data analysis results.  
+Only use <[`data_analysis/data_analysis.ipynb`](https://github.com/MengYan0901/DL_Homework/blob/main/data_analysis/data_analysis.ipynb)> to check data analysis results.  
 
 * For Whole Project:
 1. Install anaconda  
@@ -146,7 +146,7 @@ ___
 ## Final Submission
 
 ### Evaluation   
-For the evaluation result, check the [evaluation_UI](https://github.com/MengYan0901/DL_Homework/blob/main/evaluation/evaluation%2BUI.ipynb) notebook.
+For the evaluation result, check the [`evaluation/evaluation_UI.ipynb`](https://github.com/MengYan0901/DL_Homework/blob/main/evaluation/evaluation%2BUI.ipynb) notebook.
 
 Our Model Test Result:        
 ![test_result](results/test_result/test_result.png)     
@@ -160,9 +160,9 @@ We can change the batch-size of the images inputting in the model, from 1 to 3. 
 Interface Result:    
 ![UI](results/Frontend-UI/UI3.png)
 
-### Documentation        
+### [Documentation](https://github.com/MengYan0901/DL_Homework/blob/main/results/Documentation-DeepLearning.pdf)        
 
-[Documentation](https://github.com/MengYan0901/DL_Homework/blob/main/results/Documentation-DeepLearning.pdf)
+
 
 
 ## Reference
