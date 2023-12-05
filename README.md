@@ -160,7 +160,8 @@ We can change the batch-size of the images inputting in the model, from 1 to 3. 
 Interface Result:    
 ![UI](results/Frontend-UI/UI3.png)
 
-### [Documentation](https://github.com/MengYan0901/DL_Homework/blob/main/results/Documentation-DeepLearning.pdf)        
+### Documentation
+Our [Documentation](https://github.com/MengYan0901/DL_Homework/blob/main/results/Documentation-DeepLearning.pdf)!        
 
 
 
