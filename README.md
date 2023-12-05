@@ -11,9 +11,9 @@
   - [Model](#Model) 
   - [Run Project](#run-project)
   - [Visualization Result](#visualization-result)
-- [Final Submission](#milestone-1-data-acqusition-data-preparation)  
+- [Final Submission](#final-submission)  
   - [Evaluation](#evaluation) 
-  - [Front end UI](#dataset) 
+  - [Front end UI](#front-end-ui) 
   - [Documentation](#documentation) 
 - [Reference](#reference) 
 
@@ -146,16 +146,23 @@ ___
 ## Final Submission
 
 ### Evaluation   
-For the evaluation result, check the [evaluation_UI](https://pytorch.org/vision/0.15/generated/torchvision.transforms.v2.RandomResizedCrop.html?highlight=randomresizedcrop#torchvision.transforms.v2.RandomResizedCrop) notebook.
+For the evaluation result, check the [evaluation_UI](https://github.com/MengYan0901/DL_Homework/blob/main/evaluation/evaluation%2BUI.ipynb) notebook.
 
-### Front end UI
+Our Model Test Result:        
+![test_result](results/test_result/test_result.png)     
+[Other's Model](https://github.com/pesser/pytorch_diffusion) Test Result:              
+![test_result](results/test_result/other's%20test_result.png)
 
 
-![test_result](results/Frontend-UI/UI3.png)
+### Front-end UI
+We can change the batch-size of the images inputting in the model, from 1 to 3. (If the batch-size is bigger, using our model maybe can not get netter results.)    
+   
+Interface Result:    
+![UI](results/Frontend-UI/UI3.png)
 
 ### Documentation        
 
-[Documentation ](https://pytorch.org/ignite/generated/ignite.metrics.FID.html)
+[Documentation](https://github.com/MengYan0901/DL_Homework/blob/main/results/Documentation-DeepLearning.pdf)
 
 
 ## Reference
