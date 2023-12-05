@@ -11,6 +11,10 @@
   - [Model](#Model) 
   - [Run Project](#run-project)
   - [Visualization Result](#visualization-result)
+- [Final Submission](#milestone-1-data-acqusition-data-preparation)  
+  - [Evaluation](#evaluation) 
+  - [Front end UI](#dataset) 
+  - [Documentation](#documentation) 
 - [Reference](#reference) 
 
 
@@ -125,23 +129,34 @@ The overall model is a diffusion model, aims to learn the noise distribution and
 * train:  run ``python main.py``
 
 
-
 * evaluation run ``python test.py``
-
-
 
 ### Visualization Result
 
-Train Result:
+Train Processing:    
 
 ![train_result](results/train_result/train_result.png)
+    
+Test Result:    
 
-
-Test Result:
-
-![test_result](results/test_result/test_result.png)
+![test_result](results/test_result/test_result.JPG)
 
 ___
+
+## Final Submission
+
+### Evaluation   
+For the evaluation result, check the [evaluation_UI](https://pytorch.org/vision/0.15/generated/torchvision.transforms.v2.RandomResizedCrop.html?highlight=randomresizedcrop#torchvision.transforms.v2.RandomResizedCrop) notebook.
+
+### Front end UI
+
+
+![test_result](results/Frontend-UI/UI3.png)
+
+### Documentation        
+
+[Documentation ](https://pytorch.org/ignite/generated/ignite.metrics.FID.html)
+
 
 ## Reference
 ```
