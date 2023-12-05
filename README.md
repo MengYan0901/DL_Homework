@@ -31,7 +31,7 @@
 
 * Data Analysis
 
-Only use <[`data_analysis/data_analysis.ipynb`](https://github.com/MengYan0901/DL_Homework/blob/main/data_analysis/data_analysis.ipynb)> to check data analysis results.  
+Only use [`data_analysis/data_analysis.ipynb`](https://github.com/MengYan0901/DL_Homework/blob/main/data_analysis/data_analysis.ipynb) to check data analysis results.  
 
 * For Whole Project:
 1. Install anaconda  
