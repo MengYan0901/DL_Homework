@@ -155,7 +155,7 @@ Our Model Test Result:
 
 
 ### Front-end UI
-We can change the batch-size of the images inputting in the model, from 1 to 3. (If the batch-size is bigger, using our model maybe can not get better results. Because maybe with larger batch-size, the model may need larger step to denoise it.)    
+We can change the batch-size of the images inputting in the model, from 1 to 3. (If the batch-size is bigger, using our model maybe can not get better results. Because with larger batch-size, the model may need larger step to denoise it.)    
    
 Interface Result:    
 ![UI](results/Frontend-UI/UI3.png)
